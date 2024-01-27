@@ -1,0 +1,105 @@
+---
+title: "SDT-SH"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(fpp3)
+library(plotly)
+library(patchwork)
+library(tidyquant)
+```
+
+```{r}
+?aus_accommodation
+aus_accommodation
+```
+
+```{r}
+tasmania <- aus_accommodation |>
+  filter(State == "Tasmania")
+
+tasmania |>
+  select(Date, Takings, Occupancy) |> 
+  mutate(
+    `Año unión N°1` = 1
+  ) |> 
+  janitor::clean_names()
+
+# para seleccionar todas menos una, poner select(-laquenoquieras)
+# ejemplo: select(-c(State, CPI))
+```
+
+```{r}
+# más cosas
+tasmania |>
+  glimpse()
+
+names(tasmania)
+```
+
+```{r}
+# array -> función c
+c(3,6,12,89)
+c("María", "Sandra", "Daniela")
+
+```
+
+```{r}
+tasmania |> 
+  autoplot(log(Takings), color='#CD5555', size=0.7)
+```
+
+Se usa una transformación logarítmica para estabilizar la varianza.
+
+```{r}
+tasmania |> 
+  gg_season(log(Takings))
+```
+
+Se puede ver la varianza estacional durante los cuatro trimestres.
+
+```{r}
+tasmania |> 
+  gg_subseries(log(Takings))
+```
+
+```{r}
+tasmania |> 
+  gg_tsdisplay(log(Takings), plot_type="season")
+```
+
+```{r}
+stocks <- c("MCK", "META", "NVDA")
+
+stocks_data <- tq_get(
+  x = stocks,
+  get = "stock.prices",
+  from = "2010-01-01",
+  to = "2024-01-25")
+
+stocks_data
+```
+```{r}
+stocks_data <- stocks_data |> 
+  as_tsibble(index = date, key = symbol)
+stocks_data
+```
+```{r}
+stocks_data |> 
+  ggplot(aes(x = date, y =close, color = symbol)) +
+  theme_dark() +
+  geom_line()
+```
+
+```{r}
+#| warning: false
+stocks_data |> 
+  ggplot(aes(x = date, open = open, high = high, low = low, close =  close)) +
+  theme_dark() +
+  geom_candlestick()+
+  facet_wrap(~ symbol, ncol = 2)
+```
+
