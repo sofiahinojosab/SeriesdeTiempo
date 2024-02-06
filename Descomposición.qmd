@@ -33,7 +33,10 @@ empleo_components <- empleo_decomp |>
 
 empleo_components
 ```
-```{r}
+### Gráficas
 
+```{r}
+empleo_components |> 
+  autoplot()
 ```
 
