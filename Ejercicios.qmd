@@ -1,0 +1,88 @@
+---
+title: "Tarea Descomposición"
+format: html
+editor: visual
+author: "Ana Sofía Hinojosa Bale"
+---
+
+
+## 1 
+ 
+```{r}
+library(tidyverse)
+library(fpp3)
+```
+
+```{r}
+pib_tsbl <- global_economy |> 
+  autoplot(GDP/Population) + 
+  theme(legend.position = "none")
+
+pib_tsbl
+```
+
+Cómo ha sido la evolución de la economía de los países en el tiempo?
+
+Ha incrementado en la mayoría de los países, ya que las series tienen una tendencia alcista, lo que significa que el PIB per cápita ha ido creciendo a lo largo del tiempo.
+
+
+¿Cuál país tiene el mayor PIB per cápita?
+
+```{r}
+global_economy |>
+  mutate(gdp_per_capita = GDP/Population) |>
+  select(-c(Code, Growth:Exports)) |>
+  filter(Year %in% 2010:2017) |>
+  as_tibble() |>
+  group_by(Country) |>
+  summarise(mean_gdppc = mean(gdp_per_capita, na.rm = TRUE)) |>
+  arrange(desc(mean_gdppc))
+
+```
+
+## 2
+
+```{r}
+pibusa_tsbl <- global_economy |> 
+  filter(Country == "United States") |> 
+  autoplot(GDP) + ggtitle("PIB de Estados Unidos")
+pibusa_tsbl
+```
+
+
+```{r}
+pibmex_tsbl <- global_economy |> 
+  filter(Country == "Mexico") |> 
+  autoplot(GDP) + ggtitle("PIB de México")
+pibmex_tsbl
+```
+```{r}
+pibusa_log <- global_economy |> 
+  filter(Country == 'United States') |> 
+  autoplot(log(GDP)) + ggtitle("PIB de Estados Unidos con transformación logarítmica")
+pibusa_log
+```
+
+```{r}
+pibmex_log <- global_economy |> 
+  filter(Country == "Mexico") |> 
+  autoplot(log(GDP)) + ggtitle("PIB de México con transformación logarítmica")
+pibmex_log
+```
+
+```{r}
+vic_elec |> 
+  autoplot(Demand) + ggtitle("Demanda de electricidad en el estado de Victoria (Australia)")
+```
+
+```{r}
+vic_log <- vic_elec |> 
+  autoplot(log(Demand)) + ggtitle("Demanda de electricidad en el estado de Victoria (Australia)")
+vic_log
+```
+
+```{r}
+
+  
+```
+
