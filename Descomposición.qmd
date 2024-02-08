@@ -40,3 +40,18 @@ empleo_components |>
   autoplot()
 ```
 
+### Descomposición STL
+
+
+```{r}
+empleo_stl <- empleo_tsbl |> 
+  model(
+    stl = STL(Employed),
+    stl2=STL(Employed ~ trend(window =7) + season(window = "periodic"))
+  )
+
+empleo_stl |> 
+  components() |> 
+  autoplot()
+```
+
