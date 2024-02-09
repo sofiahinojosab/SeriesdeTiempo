@@ -1,34 +1,48 @@
 ---
 title: "Tarea Descomposición"
-format: html
+format: 
+  html:
+    embed-resources: true
+    toc: true
+    theme:
+      light: minty
+      dark: darkly
+df-print: paged
 editor: visual
 author: "Ana Sofía Hinojosa Bale"
 ---
 
 # Tarea
 
-## 1 
- 
+## Ejercicio 1
+
+Tomando el PIB de cada país, GDP, contenido en la tabla global_economy, grafique el PIB per cápita a lo largo del tiempo.
+
 ```{r}
+#| message: false
+#| warning: false
 library(tidyverse)
 library(fpp3)
+library(plotly)
 ```
-
 
 ```{r}
 pib_tsbl <- global_economy |> 
   autoplot(GDP/Population) + 
-  theme(legend.position = "none")
+  theme(legend.position = "none")+
+  ggtitle('PIB per cápita por país')+
+  xlab('Año')+
+  ylab('PIB per cápita')
+  
 
 pib_tsbl
 ```
 
-Cómo ha sido la evolución de la economía de los países en el tiempo?
+### Cómo ha sido la evolución de la economía de los países en el tiempo?
 
 Ha incrementado en la mayoría de los países, ya que las series tienen una tendencia alcista, lo que significa que el PIB per cápita ha ido creciendo a lo largo del tiempo.
 
-
-¿Cuál país tiene el mayor PIB per cápita?
+### ¿Cuál país tiene el mayor PIB per cápita?
 
 ```{r}
 global_economy |>
@@ -42,86 +56,144 @@ global_economy |>
 
 ```
 
-## 2
+El país que tiene mayor PIB per cápita es Mónaco.
 
-###i
+## Ejercicio 2
+
+Grafique las siguientes series de tiempo y transfórmelas y/o ajústelas si lo considera necesario. ¿Qué efecto tuvo la transformación?
+
+### i - PIB de EEUU
 
 ```{r}
 pibusa_tsbl <- global_economy |> 
   filter(Country == "United States") |> 
-  autoplot(GDP) + ggtitle("PIB de Estados Unidos")
-pibusa_tsbl
+  autoplot(GDP) + ggtitle("PIB de Estados Unidos")+
+  ggtitle('PIB Estados Unidos')+
+  xlab('Año')+
+  ylab('PIB')
+ggplotly(pibusa_tsbl, dynamicTicks = TRUE)
+
 ```
+
 ```{r}
 pibusa_log <- global_economy |> 
   filter(Country == 'United States') |> 
-  autoplot(log(GDP)) + ggtitle("PIB de Estados Unidos con transformación logarítmica")
+  autoplot(log(GDP)) + ggtitle("PIB de Estados Unidos") +
+  labs(subtitle = ('Con transformación Logarítmica')) +
+  xlab('Año')+
+  ylab('PIB')
+
 pibusa_log
 ```
-### ii
+
+### ii - PIB de México
 
 ```{r}
 pibmex_tsbl <- global_economy |> 
   filter(Country == "Mexico") |> 
-  autoplot(GDP) + ggtitle("PIB de México")
-pibmex_tsbl
+  autoplot(GDP) + ggtitle("PIB de México")+
+  xlab('Año')+
+  ylab('PIB')
+ggplotly(pibmex_tsbl, dynamicTicks = TRUE)
 ```
 
 ```{r}
 pibmex_log <- global_economy |> 
   filter(Country == "Mexico") |> 
-  autoplot(log(GDP)) + ggtitle("PIB de México con transformación logarítmica")
+  autoplot(log(GDP)) + ggtitle("PIB de México")+
+  labs(subtitle = 'Con transformación logarítmica')+
+  xlab('Año')+
+  ylab('PIB')
+
 pibmex_log
 ```
-### iii
+
+### iii - Demanda de electricidad en el estado de Victoria (Australia)
 
 ```{r}
 vic_elec |> 
-  autoplot(Demand) + ggtitle("Demanda de electricidad en el estado de Victoria (Australia)")
+  autoplot(Demand) + ggtitle("Demanda de electricidad en el estado de Victoria (Australia)")+
+  xlab("Tiempo (30 minutos)")+
+  ylab("Demanda")
+
+vic_elec
 ```
 
 ```{r}
 vic_log <- vic_elec |> 
-  autoplot(log(Demand)) + ggtitle("Demanda de electricidad en el estado de Victoria (Australia)")
+  autoplot(log(Demand)) + ggtitle("Demanda de electricidad en el estado de Victoria (Australia)")+
+  labs(subtitle = "Con transformación logarítmica")+
+  xlab('Tiempo (30 minutos)')+
+  ylab('Demanda')
 vic_log
 ```
-¿Qué efectos tuvieron las transformaciones?
 
-## 3
+### ¿Qué efectos tuvieron las transformaciones?
+
+En el caso de la serie de tiempo del PIB de México, se puedde ver que en la serie original, su varianza va aumentando con el tiempo, aunque poco, por lo que transformación logarítmica permite estabilizar esta varianza.
+
+En el caso de la serie de tiempo del PIB de Estados Unidos, mientras que en la originall se muestra una tendencia exponencial, se puede observar que la transformación logarítmica la hizo un poco más lineal.
+
+En el caso de la tercera serie, la de demanda de electricidad en Victoria, se nota que la escala se redujo, y que de alcanzar más de 8000 en demanda, ahora alcanzza a un poco más de 9.2, lo que puede facilitar su lectura.
+
+## Ejercicio 3
 
 ```{r}
 canadian_gas |> 
-  autoplot()
+  autoplot() + 
+  ggtitle("Gas Canadiense")+
+  xlab('Fecha')+
+  ylab('Volumen')
 
 ```
+
+### ¿Es útil realizar una transformación de Box-Cox a los datos canadian_gas? ¿Por qué sí o por qué no?
 
 ```{r}
 # Transformación Box-Cox
 
-(lambda <- canadian_gas %>%
-  features(Volume, features = guerrero) %>%
+(lambda <- canadian_gas |> 
+  features(Volume, features = guerrero) |> 
   pull(lambda_guerrero))
   
-canadian_gas %>% autoplot(box_cox(Volume, lambda))
+canadian_gas |> 
+  autoplot(box_cox(Volume, lambda))+
+  ggtitle('Gas Canadiense')+
+  labs(subtitle = 'Con transformación Box-Cox')+
+  xlab('Fecha')+
+  ylab('volumen')
 
 ```
 
-## 4
+La transformación no resulta útil, ya que no presenta ventajas, no se estabiliza la varianza ni se normaliza la distribución, y aunque puede que sí facilite la interpretación de la serie, no genera una gran diferencia.
+
+## Ejercicio 4
+
+El dataset fma::plastics tiene información de las ventas mensuales (medidas en miles) del producto A para un productor de plásticos, a lo largo de cinco años.
+
+### i
+
+#### Grafique la serie de tiempo para el producto A.
 
 ```{r}
 fma::plastics |> 
-  autoplot()
+  autoplot() +
+  xlab("Año (datos mensuales)") + 
+  ylab("Ventas") +
+  ggtitle("Plásticos Producto A")
 ```
 
-### Descomposición Clásica
-```{r}
-plastics_tsbl
-```
+#### ¿Identifica algún componente de tendencia-ciclo y/o estacional?
+
+Sí, la tendencia es alcista, ya que con el tiempoo va aumentando, además de que la serie presenta estacionalidad anual.
+
+### ii
+
+#### Utilice una descomposición clásica multiplicativa para calcular el componente de tendencia y estacional
 
 ```{r}
 plastics_tsbl <- as_tsibble(fma::plastics)
 ```
-
 
 ```{r}
 plastics_decomp <- plastics_tsbl |> 
@@ -131,25 +203,47 @@ plastics_decomp <- plastics_tsbl |>
   )
 ```
 
-
 ```{r}
 plastics_components <- plastics_decomp |> 
   components()
 
 plastics_components
 ```
+
 ```{r}
 plastics_components |> 
   autoplot()
 ```
+
+### iii
+
+#### ¿Los resultados coinciden con su respuesta al inciso i?
+
+Sí, como se puede ver, la tendencia sí es a la alta y sí presenta estacionalidad anual.
+
+### iv
+
+#### Calcule y grafique los datos desestacionalizados
+
 ```{r}
 datos_desestacionalizados <- plastics_components |>
   select(index, season_adjust)
-autoplot(datos_desestacionalizados)  
+
+datos_desestacionalizados |> 
+  autoplot() + 
+  ggtitle("Plásticos Producto A")+
+  xlab('Fecha')+
+  ylab('Ventas')+
+  labs(subtitle = "Datos Desestacionalizados")
 ```
+
+### v
+
+#### Cambie, manualmente, una observación para que sea un outlier (p. ej., sume 500 a una observación). Vuelva a estimar los datos desestacionalizados. ¿Cuál fue el efecto de ese outlier?
+
 ```{r}
 outlier_tsbl <- plastics_tsbl |> 
-  mutate(value = value + 500  * (value == 776))
+  mutate(value = value + 500  * (value == 1528))
 
 outlier_tsbl
 ```
@@ -170,12 +264,24 @@ outlier_components |>
 ```{r}
 outlier_desestacionalizados <- outlier_components |>
   select(index, season_adjust)
-autoplot(outlier_desestacionalizados)  
+
+outlier_desestacionalizados |> 
+  autoplot()+
+  ggtitle('Plásticos Producto A')+
+  labs(subtitle = 'Datos desestacionalizados con outlier al final de la serie') +
+  xlab('Fecha')+
+  ylab('Ventas')
+
+
 ```
+
+El efecto de este outlier es que tanto la tendencia como la estacionalidad presentan modificaciones, y en los datos desestacionalizados se puede observar que un cambio co,mo este genera complicaciones en la visualización del gráfico.
+
+### vi
 
 ```{r}
 outliermedio_tsbl <- plastics_tsbl |> 
-  mutate(value = value + 500  * (value == 951))
+  mutate(value = value + 500  * (value == 1204))
 
 outliermedio_decomp <- outliermedio_tsbl |> 
   model(
@@ -188,10 +294,19 @@ outliermedio_components <- outliermedio_decomp |>
 outliermedio_components |> 
   autoplot()
 ```
+
 ```{r}
 outliermedio_desestacionalizados <- outliermedio_components |>
   select(index, season_adjust)
-autoplot(outliermedio_desestacionalizados)  
+
+outliermedio_desestacionalizados |> 
+  autoplot()+
+  ggtitle('Plásticos Producto A')+
+  labs(subtitle = 'Datos desestacionalizados con outlier en medio de la serie') +
+  xlab('Fecha')+
+  ylab('Ventas')
 ```
 
+#### ¿Hace alguna diferencia que el outlier se encuentre cerca del final de la serie o más alrededor del centro?
 
+Sí hay una diferencia, ya que no solo se modifican los valores de outlier, sino que también se han modificado otros valores al hacer la descomposición. Al ocurrir esto, se distorciona la descomposición y ya no será igual de confiable.
