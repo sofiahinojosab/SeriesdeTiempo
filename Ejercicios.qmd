@@ -5,6 +5,7 @@ editor: visual
 author: "Ana Sofía Hinojosa Bale"
 ---
 
+# Tarea
 
 ## 1 
  
@@ -12,6 +13,7 @@ author: "Ana Sofía Hinojosa Bale"
 library(tidyverse)
 library(fpp3)
 ```
+
 
 ```{r}
 pib_tsbl <- global_economy |> 
@@ -42,25 +44,27 @@ global_economy |>
 
 ## 2
 
+###i
+
 ```{r}
 pibusa_tsbl <- global_economy |> 
   filter(Country == "United States") |> 
   autoplot(GDP) + ggtitle("PIB de Estados Unidos")
 pibusa_tsbl
 ```
-
+```{r}
+pibusa_log <- global_economy |> 
+  filter(Country == 'United States') |> 
+  autoplot(log(GDP)) + ggtitle("PIB de Estados Unidos con transformación logarítmica")
+pibusa_log
+```
+### ii
 
 ```{r}
 pibmex_tsbl <- global_economy |> 
   filter(Country == "Mexico") |> 
   autoplot(GDP) + ggtitle("PIB de México")
 pibmex_tsbl
-```
-```{r}
-pibusa_log <- global_economy |> 
-  filter(Country == 'United States') |> 
-  autoplot(log(GDP)) + ggtitle("PIB de Estados Unidos con transformación logarítmica")
-pibusa_log
 ```
 
 ```{r}
@@ -69,6 +73,7 @@ pibmex_log <- global_economy |>
   autoplot(log(GDP)) + ggtitle("PIB de México con transformación logarítmica")
 pibmex_log
 ```
+### iii
 
 ```{r}
 vic_elec |> 
@@ -80,9 +85,93 @@ vic_log <- vic_elec |>
   autoplot(log(Demand)) + ggtitle("Demanda de electricidad en el estado de Victoria (Australia)")
 vic_log
 ```
+¿Qué efectos tuvieron las transformaciones?
+
+## 3
 
 ```{r}
+canadian_gas |> 
+  autoplot()
 
-  
 ```
+
+```{r}
+# Transformación Box-Cox
+
+(lambda <- canadian_gas %>%
+  features(Volume, features = guerrero) %>%
+  pull(lambda_guerrero))
+  
+canadian_gas %>% autoplot(box_cox(Volume, lambda))
+
+```
+
+## 4
+
+```{r}
+fma::plastics |> 
+  autoplot()
+```
+
+### Descomposición Clásica
+```{r}
+plastics_tsbl
+```
+
+```{r}
+plastics_tsbl <- as_tsibble(fma::plastics)
+```
+
+
+```{r}
+plastics_decomp <- plastics_tsbl |> 
+  model(
+    clasica = classical_decomposition(value, 
+                                      type = "multiplicative")
+  )
+```
+
+
+```{r}
+plastics_components <- plastics_decomp |> 
+  components()
+
+plastics_components
+```
+```{r}
+plastics_components |> 
+  autoplot()
+```
+```{r}
+datos_desestacionalizados <- plastics_components |>
+  select(index, season_adjust)
+autoplot(datos_desestacionalizados)  
+```
+```{r}
+outlier_tsbl <- plastics_tsbl |> 
+  mutate(value = value + 500  * (value == 776))
+
+outlier_tsbl
+```
+
+```{r}
+outlier_decomp <- outlier_tsbl |> 
+  model(
+    clasica = classical_decomposition(value, 
+                                      type = "multiplicative"))
+
+outlier_components <- outlier_decomp |> 
+  components() 
+
+outlier_components |> 
+  autoplot()
+```
+
+```{r}
+outlier_desestacionalizados <- outlier_components |>
+  select(index, season_adjust)
+autoplot(outlier_desestacionalizados)  
+```
+
+
 
