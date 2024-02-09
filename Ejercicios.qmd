@@ -173,5 +173,25 @@ outlier_desestacionalizados <- outlier_components |>
 autoplot(outlier_desestacionalizados)  
 ```
 
+```{r}
+outliermedio_tsbl <- plastics_tsbl |> 
+  mutate(value = value + 500  * (value == 951))
+
+outliermedio_decomp <- outliermedio_tsbl |> 
+  model(
+    clasica = classical_decomposition(value, 
+                                      type = "multiplicative"))
+
+outliermedio_components <- outliermedio_decomp |> 
+  components() 
+
+outliermedio_components |> 
+  autoplot()
+```
+```{r}
+outliermedio_desestacionalizados <- outliermedio_components |>
+  select(index, season_adjust)
+autoplot(outliermedio_desestacionalizados)  
+```
 
 
