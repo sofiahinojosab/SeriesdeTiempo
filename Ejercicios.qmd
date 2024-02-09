@@ -214,6 +214,16 @@ plastics_components
 plastics_components |> 
   autoplot()
 ```
+```{r}
+plastics_components |> 
+  autoplot(trend)+
+  ggtitle('Componente de Tendencia')
+```
+```{r}
+plastics_components |> 
+  autoplot(seasonal)+
+  ggtitle("Componente estacional")
+```
 
 ### iii
 
