@@ -1,0 +1,88 @@
+---
+title: "Forecasting"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(fpp3)
+```
+
+```{r}
+mex <- global_economy |> 
+  filter(Country == 'Mexico') |> 
+  drop_na() |> 
+  select(-c(Country, Code))
+
+mex |> 
+  autoplot(Growth)
+
+mex |> 
+  features(Growth, features = guerrero)
+
+mex |> 
+  autoplot(box_cox(Growth, lambda = 0.7249))
+
+```
+
+```{r}
+# Estimación de los modelos
+
+mex_fit <- mex |>
+  model(
+    media = MEAN(Growth),
+    naive = NAIVE(box_cox(Growth, lambda = 0.7249)),
+    drift = RW(box_cox(Growth, lambda = 0.7249) ~ drift())
+  )
+
+```
+
+```{r}
+
+# Diagnóstico de residuos
+
+mex_fit |>
+  augment() |> 
+    features(.innov, ljung_box, lag = 10, dof = 0)
+```
+
+Como el p-value de los tres modelos es mayor a nuestra $\alpha$, no se rechaza la hipótesis nula. Los residuos son ruido blanco.
+
+```{r}
+# MEDIA
+
+mex_fit |> 
+  select(media) |>
+  gg_tsresiduals()
+```
+
+```{r}
+# DRIFT
+
+mex_fit |> 
+  select(drift) |>
+  gg_tsresiduals()
+
+```
+
+
+```{r}
+# NAIVE
+
+mex_fit |> 
+  select(naive) |>
+  gg_tsresiduals()
+
+```
+
+## Forecast
+
+```{r}
+mex_fc <- mex_fit |> 
+  forecast(h= "6 years")
+mex_fc |> 
+  autoplot(mex) +
+  facet_wrap( ~.model)
+```
+
