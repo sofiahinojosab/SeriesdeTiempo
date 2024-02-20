@@ -84,5 +84,6 @@ mex_fc <- mex_fit |>
 mex_fc |> 
   autoplot(mex) +
   facet_wrap( ~.model)
+  theme(legend.position = 'none')
 ```
 
