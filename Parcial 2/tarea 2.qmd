@@ -1,8 +1,10 @@
 ---
-title: "tarea ets"
-format: html
-editor: visual
-embed-resources: TRUE
+title: "Tarea Pronósticos"
+author: Sofía Hinojosa y Julia Hernández
+format: 
+  html:
+    embed-resources: true
+    toc: true
 ---
 
 ```{r}
@@ -22,7 +24,7 @@ lh_train <- lh %>%
   filter(year(Month) <= 2010, Title =="Wholesale Trade")
 lh_train
 ```
-## Primeros modelos
+## Métodos de referencia
 ### Entrenamiento de datos
 
 ```{r}
@@ -92,7 +94,7 @@ lh_train |>
   components() |> 
   autoplot()
 ```
-## Segundos modelos
+## Métodos de suavización exponencial
 ```{r}
 lh_fit <- lh_train |> 
   model(
@@ -163,7 +165,7 @@ lh_fc |>
   accuracy(lh) |> 
   arrange(MAPE)
 ```
-### Errores en el modelo
+### Métricas de error
 
 ```{r}
 lh_fc |>
@@ -184,6 +186,10 @@ lh_fut
 lh_fut |> 
   autoplot(lh)
 ```
+## Análisis de ETS
+
+A partir dde observar tanto las gráficas como las métricas de error en ambos tipos de modelos, tanto de suavización exponencial como en los métodos de referencia, nos dimos cuenta que los de suavización exponencial sí superan a los de referencia, en especial el modelo ets_MAdM, método que utiliza error multiplicativo, tendencia aditiva amortiguada y estacionalidad multiplicativa, que es el que mejor se ajusta a los datos de la serie y que mejor puede generar un pronóstico. 
+
 # Serie de tiempo 2
 
 
@@ -199,7 +205,7 @@ jam_train <- jam |>
 jam_train
 ```
 
-## Primeros modelos
+## Métodos de referencia
 
 ```{r}
 jam_fit <-jam_train |> 
@@ -258,7 +264,7 @@ jam_train |>
 jam_train |> 
   autoplot(log(Population))
 ```
-## Segundos modelos
+## Métodos de suavización exponencial
 
 ```{r}
 jam_fit <- jam_train |> 
@@ -321,6 +327,10 @@ jam_fc |>
   facet_wrap(~ .model, ncol = 3) +
   theme(legend.position = "none")
 
+```
+## Métricas de error
+
+```{r}
 jam_fc |> 
   accuracy(jam) |> 
   arrange(MAPE)
@@ -340,3 +350,7 @@ jam_fut
 jam_fut |> 
   autoplot(jam)
 ```
+
+## Análisis de ETS
+
+A partir de observar tanto las gráficas como las métricas de error en ambos tipos de métodos, tanto de suavización exponencial como en los métodos de referencia, nos dimos cuenta que los de suavización exponencial sí superan a los de referencia, en especial el modelo ets_AAdN, que utiliza error aditivo, tendencia aditiva amortiguada y estacionalidad nula, ya que la serie elegida no presenta estacionalidad, que es el que mejor se ajusta a los datos de la serie y que mejor puede generar un pronóstico, en esta serie, aunque en las métricas de error se observaban otros métodos con un menor error que el método que elegimos al final, fueron descartadas porque rechazaban la hipótesis nula. 
