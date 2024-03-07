@@ -1,0 +1,342 @@
+---
+title: "tarea ets"
+format: html
+editor: visual
+embed-resources: TRUE
+---
+
+```{r}
+#| message: false
+library(fpp3)
+library(tidyverse)
+```
+
+# Serie de tiempo 1 
+
+```{r}
+lh <- us_employment |> 
+  filter(Title == "Wholesale Trade", year(Month) >= 1985)
+lh
+
+lh_train <- lh %>% 
+  filter(year(Month) <= 2010, Title =="Wholesale Trade")
+lh_train
+```
+## Primeros modelos
+### Entrenamiento de datos
+
+```{r}
+lh_fit <- lh_train %>%
+  model(
+    Mean = MEAN(Employed),
+    `Naïve` = NAIVE(Employed),
+    `Seasonal naïve` = SNAIVE(Employed),
+    Drift = RW(Employed ~ drift())
+  )
+
+lh_fc <- lh_fit %>%
+  forecast(h = "9 years")
+
+lh_fc %>%
+  autoplot(lh |> filter_index("2002 Jan" ~.), level = NULL) +
+  xlab("Year") + ylab("people") +
+  ggtitle("Forecasts for employement Wholesale Trade") +
+  guides(colour=guide_legend(title="Forecast"))
+```
+### Errores en el entrenamiento
+
+```{r}
+lh_accu_train <- accuracy(lh_fit) |> 
+  arrange(MAE)
+lh_accu_train
+```
+
+### Errores en el modelo
+
+```{r}
+lh_accu_fc <- lh_fc |> 
+  accuracy(lh) |> 
+  arrange(MAE)
+
+lh_accu_fc
+```
+
+```{r}
+lh_train |> 
+  autoplot(Employed)
+
+lh_train |> 
+  autoplot(log(Employed))
+```
+## Descomposiciones
+
+```{r}
+dcmp <- lh_train |> 
+  model(
+    STL(log(Employed), robust = TRUE)
+  ) 
+
+dcmp |> 
+  components() |> 
+  autoplot()
+
+dcmp |> 
+  components() |> 
+  ggplot(aes(x = Month, y = season_adjust)) +
+  geom_line()
+
+lh_train |> 
+  model(
+    STL(Employed, robust = TRUE)
+  ) |> 
+  components() |> 
+  autoplot()
+```
+## Segundos modelos
+```{r}
+lh_fit <- lh_train |> 
+  model(
+    snaive = SNAIVE(Employed),
+    ets_ANA = ETS(Employed ~ error("A") + trend("N") + season("A")),
+    ets_AAdA = ETS(Employed ~ error("A") + trend("Ad") + season("A")),
+    ets_MAdM = ETS(Employed ~ error("M") + trend("Ad") + season("M")),
+    ets_ANA_l = ETS(log(Employed) ~ error("A") + trend("N") + season("A")),
+    ets_AAdA_l = ETS(log(Employed) ~ error("A") + trend("Ad") + season("A")),
+    ets_MAdM_l = ETS(log(Employed) ~ error("M") + trend("Ad") + season("M")),
+    stl_ets_A = decomposition_model(
+      STL(log(Employed), robust = TRUE),
+      ETS(season_year ~ error("A") + trend("N") + season("A")),
+      ETS(season_adjust ~ error("A") + trend("Ad") + season("N"))
+    ),
+    stl_ets_M = decomposition_model(
+      STL(log(Employed), robust = TRUE),
+      ETS(season_year ~ error("M") + trend("N") + season("M")),
+      ETS(season_adjust ~ error("A") + trend("Ad") + season("N"))
+    )
+  )
+
+lh_fit
+```
+### Errores en el entrenamiento
+
+```{r}
+accuracy(lh_fit) |> 
+  arrange(MAPE)
+```
+
+```{r}
+lh_fit |> 
+  augment() |> 
+  features(.innov, ljung_box, lag = 5)
+
+lh_fit |> 
+  select(stl_ets_A) |> 
+  gg_tsresiduals()
+
+lh_fit |> 
+  select(stl_ets_M) |> 
+  gg_tsresiduals()
+```
+### Pronósticos de prueba
+
+```{r}
+lh_fc <- lh_fit |> 
+  forecast(h = "9 years")
+
+lh_fc
+
+lh_fc |> 
+  autoplot(lh, level = NULL, size = 1)
+
+lh_fc |> 
+  filter(.model != "stl_ets_M") |>
+  autoplot(lh |> filter_index("2010 Jan" ~ .), level = NULL, size = 1)
+
+
+lh_fc |> 
+  filter(.model != "stl_ets_M") |> 
+  autoplot(lh |> filter_index("2010 Jan" ~ .), size = 1) +
+  facet_wrap(~ .model, ncol = 3) +
+  theme(legend.position = "none")
+
+lh_fc |> 
+  accuracy(lh) |> 
+  arrange(MAPE)
+```
+### Errores en el modelo
+
+```{r}
+lh_fc |>
+  accuracy(lh) |>
+  arrange(MAPE)
+```
+## Pronóstico final
+
+```{r}
+lh_fut <- lh |> 
+  model(
+       ets_MAdM = ETS(Employed ~ error("M") + trend("Ad") + season("M"))
+  ) |> 
+  forecast(h = "5 years")
+
+lh_fut
+
+lh_fut |> 
+  autoplot(lh)
+```
+# Serie de tiempo 2
+
+
+
+```{r}
+jam <- global_economy |> 
+  filter(Country == "Jamaica", Year >= 1985) |> 
+  select(Country, Population)
+
+jam_train <- jam |> 
+  filter(Year <= 2008)
+
+jam_train
+```
+
+## Primeros modelos
+
+```{r}
+jam_fit <-jam_train |> 
+  model(
+    Mean = MEAN(Population),
+    `Naïve` = NAIVE(Population),
+    Drift = RW(Population ~ drift())
+  )
+```
+
+```{r}
+jam_fc <- jam_fit |> 
+  forecast(h = '9 years')
+
+jam_fc %>%
+  autoplot(jam, level = NULL) +
+  xlab("Year") + ylab("Population") +
+  ggtitle("Forecasts for Population of Jamaica") +
+  guides(colour=guide_legend(title="Forecast"))
+
+```
+
+### Errores en el entrenamiento
+
+```{r}
+jam_accu_train <- accuracy(jam_fit) |> 
+  arrange(MAE)
+jam_accu_train
+```
+
+### Errores en el modelo
+
+```{r}
+jam_accu_fc <- jam_fc |> 
+  accuracy(jam) |> 
+  arrange(MAE)
+
+jam_accu_fc
+```
+
+
+
+
+```{r}
+jam_accu_fc <- jam_fc |> 
+  accuracy(jam) |> 
+  arrange(MAE)
+
+jam_accu_fc
+```
+
+```{r}
+jam_train |> 
+  autoplot(Population)
+
+jam_train |> 
+  autoplot(log(Population))
+```
+## Segundos modelos
+
+```{r}
+jam_fit <- jam_train |> 
+  model(
+    drift = RW(Population ~ drift()),
+    ets_ANA = ETS(Population ~ error("A") + trend("N") + season("N")),
+    ets_AAdA = ETS(Population ~ error("A") + trend("Ad") + season("N")),
+    ets_MAdM = ETS(Population ~ error("M") + trend("Ad") + season("N")),
+    ets_ANA_l = ETS(log(Population) ~ error("A") + trend("N") + season("N")),
+    ets_AAdA_l = ETS(log(Population) ~ error("A") + trend("Ad") + season("N")),
+    ets_MAdM_l = ETS(log(Population) ~ error("M") + trend("Ad") + season("N")),
+   
+    )
+
+jam_fit
+```
+### Errores en el entrenamiento
+
+```{r}
+accuracy(jam_fit) |> 
+  arrange(MAPE)
+```
+
+```{r}
+jam_fit |> 
+  augment() |> 
+  features(.innov, ljung_box, lag = 8)
+```
+
+```{r}
+jam_fit |> 
+  select(ets_AAdA) |> 
+  gg_tsresiduals()
+
+jam_fit |> 
+  select(ets_AAdA) |> 
+  gg_tsresiduals()
+```
+## Pronósticos de prueba
+
+```{r}
+jam_fc <- jam_fit |> 
+  forecast(h = "9 years")
+
+jam_fc
+
+jam_fc |> 
+  autoplot(jam, level = NULL, size = 1)
+
+jam_fc |> 
+  autoplot(jam |> filter_index("2003" ~ .), level = NULL, size = 1)
+
+jam_fc |> 
+  autoplot(jam |> filter_index("2003" ~ .), size = 1) +
+  facet_wrap(~ .model, ncol = 3) +
+  theme(legend.position = "none")
+
+jam_fc |> 
+  autoplot(jam |> filter_index("2003" ~ .), size = 1) +
+  facet_wrap(~ .model, ncol = 3) +
+  theme(legend.position = "none")
+
+jam_fc |> 
+  accuracy(jam) |> 
+  arrange(MAPE)
+```
+
+## Pronóstico final
+
+```{r}
+jam_fut <- jam |> 
+  model(
+    ets_AAdA = ETS(Population ~ error("A") + trend("Ad") + season("N"))
+  ) |> 
+  forecast(h = "5 years")
+
+jam_fut
+
+jam_fut |> 
+  autoplot(jam)
+```
