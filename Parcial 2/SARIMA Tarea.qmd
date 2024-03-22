@@ -1,0 +1,49 @@
+---
+title: "SARIMA"
+author: "Sofía Hinojosa y Julia Hernández"
+format: 
+  html:
+    embed-resources: true
+    toc: true
+editor: visual
+---
+
+```{r pkgs, message=FALSE}
+library(tidyverse)
+library(fpp3)
+library(patchwork)
+```
+
+
+```{r}
+h02 <- PBS |> 
+  filter(ATC2 == "H02") |> 
+  summarise(Cost = sum(Cost)/1e6)
+
+h02
+
+h02 |> 
+  mutate(log(Cost)) |> 
+  gather() %>%
+  ggplot(aes(x = Month, y = value)) +
+  geom_line() +
+  facet_grid(key ~ ., scales = "free_y") +
+  xlab("Year") + ylab("") +
+  ggtitle("Cortecosteroid drug scripts (H02)")
+```
+
+
+```{r, warning = FALSE}
+h02 |> 
+  gg_tsdisplay(difference(log(Cost), 12), plot_type='partial', lag_max = 48)
+
+h02 |> 
+  gg_tsdisplay(log(Cost) |> 
+                 difference(12) |> 
+                 difference(), plot_type='partial', lag_max = 48)
+```
+
+```{r}
+
+```
+
